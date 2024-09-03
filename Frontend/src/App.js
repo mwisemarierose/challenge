@@ -5,6 +5,8 @@ import './App.css';
 function App() {
   const [issues, setIssues] = useState([]);
   const [newIssue, setNewIssue] = useState({ title: '', description: '' });
+  const [editingIssue, setEditingIssue] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     loadIssues();
@@ -22,14 +24,22 @@ function App() {
     loadIssues();
   };
 
-  const handleUpdateIssue = async (id, updatedIssue) => {
-    await updateIssue(id, updatedIssue);
+  const handleUpdateIssue = async (e) => {
+    e.preventDefault();
+    await updateIssue(editingIssue.id, editingIssue);
+    setIsModalOpen(false);
+    setEditingIssue(null);
     loadIssues();
   };
 
   const handleDeleteIssue = async (id) => {
     await deleteIssue(id);
     loadIssues();
+  };
+
+  const openEditModal = (issue) => {
+    setEditingIssue(issue);
+    setIsModalOpen(true);
   };
 
   return (
@@ -55,14 +65,39 @@ function App() {
       <ul>
         {issues.map((issue) => (
           <li key={issue.id}>
-            {issue.title} - {issue.description}
-            <button onClick={() => handleUpdateIssue(issue.id, { ...issue, title: `${issue.title} (updated)` })}>
-              Update
-            </button>
-            <button onClick={() => handleDeleteIssue(issue.id)}>Delete</button>
+            <span>{issue.title} - {issue.description}</span>
+            <div>
+              <button onClick={() => openEditModal(issue)}>Edit</button>
+              <button onClick={() => handleDeleteIssue(issue.id)}>Delete</button>
+            </div>
           </li>
         ))}
       </ul>
+      {isModalOpen && (
+        <div className="modal">
+          <div className="modal-content">
+            <h2>Edit Issue</h2>
+            <form onSubmit={handleUpdateIssue}>
+              <input
+                type="text"
+                value={editingIssue.title}
+                onChange={(e) => setEditingIssue({ ...editingIssue, title: e.target.value })}
+                placeholder="Title"
+                required
+              />
+              <input
+                type="text"
+                value={editingIssue.description}
+                onChange={(e) => setEditingIssue({ ...editingIssue, description: e.target.value })}
+                placeholder="Description"
+                required
+              />
+              <button type="submit">Update Issue</button>
+              <button type="button" onClick={() => setIsModalOpen(false)}>Cancel</button>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
